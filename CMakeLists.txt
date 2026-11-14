@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(DB_QUERY_PROCESSOR LANGUAGES CXX)
+project(MINI_DB LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -30,6 +30,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 add_subdirectory(storage_engine)
+add_subdirectory(query_processor)
 
 add_executable(main_test
     main.cpp

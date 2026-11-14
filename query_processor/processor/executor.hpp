@@ -13,7 +13,7 @@ struct Row {
 };
 
 
-class Exectuor
+class Executor
 {
     public:
         virtual ~Executor() = default;

@@ -16,13 +16,11 @@ target_sources(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/processor
-        ${CMAKE_CURRENT_SOURCE_DIR}/processor/basic_operators
 
     # Include all DB directories that contain the .hpp files
     PUBLIC
         # where top-level project will look for the library's public headers
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/processor>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/processor/basic_operators>
         # where external projects will look for the library's public headers
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -49,7 +47,6 @@ endif()
 # Every header used by the DB Storage Engine should be here. Basically makes public to other projects using the library
 set(public_headers
     ${CMAKE_CURRENT_SOURCE_DIR}/processor/executor.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/processor/basic_operators/values.hpp    
 )
 
 set_target_properties(DB_QUERY_PROCESSOR PROPERTIES PUBLIC_HEADER "${public_headers}")

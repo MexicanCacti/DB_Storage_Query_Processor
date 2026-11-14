@@ -1,0 +1,131 @@
+# Packages the storage engine into a library & also creates the runner & test executables 
+cmake_minimum_required(VERSION 3.10)
+project(DB_STORAGE_LIBRARY LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_library(${PROJECT_NAME})
+
+# Include all DB .cpp files
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        engine/basic_types/basic_types.cpp
+        engine/basic_types/basic_types_encode_decode.cpp
+        engine/basic_types/bitmap.cpp
+        engine/helpers/helpers.cpp
+        engine/page/page.cpp
+        engine/schema/schema.cpp
+        engine/tuple/tuple.cpp
+        engine/table/table_header.cpp
+        engine/data_page/data_page_header.cpp
+        engine/data_page/data_page.cpp
+        engine/file_manager/file_manager.cpp
+        engine/buffer_pool/buffer_pool.cpp
+        engine/database/database.cpp
+)
+
+# Include all DB Directories
+target_include_directories(${PROJECT_NAME}
+    PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/basic_types
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/helpers
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/page
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/schema
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/tuple
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/table
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/data_page
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/file_manager
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/buffer_pool
+        ${CMAKE_CURRENT_SOURCE_DIR}/engine/database
+
+    # Include all DB directories that contain the .hpp files
+    PUBLIC
+        # where top-level project will look for the library's public headers
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/basic_types>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/helpers>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/page>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/schema>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/tuple>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/table>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/data_page>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/file_manager>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/buffer_pool>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/engine/database>
+        # where external projects will look for the library's public headers
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+if(DEFINED CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    message(
+        STATUS
+        "CMAKE_INSTALL_PREFIX is not set\n"
+        "Default value: ${CMAKE_INSTALL_PREFIX}\n"
+        "Will set it to ${CMAKE_SOURCE_DIR}/libs"
+    )
+    set(CMAKE_INSTALL_PREFIX
+        "${CMAKE_SOURCE_DIR}/libs"
+        CACHE PATH "Where the library will be installed to" FORCE
+    )
+else()
+    message(
+        STATUS
+        "CMAKE_INSTALL_PREFIX was already set\n"
+        "Current value: ${CMAKE_INSTALL_PREFIX}"
+    )
+endif()
+
+# Every header used by the DB Storage Engine should be here. Basically makes public to other projects using the library
+set(public_headers
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/basic_types/basic_types.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/basic_types/basic_types_encode_decode.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/basic_types/bitmap.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/helpers/helpers.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/page/page.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/schema/schema.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/tuple/tuple.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/table/table_header.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/data_page/data_page_header.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/data_page/data_page.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/file_manager/file_manager.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/buffer_pool/buffer_pool.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/database/database.hpp
+    
+)
+
+set_target_properties(DB_STORAGE_LIBRARY PROPERTIES PUBLIC_HEADER "${public_headers}")
+
+# To preserve folder structure
+include(GNUInstallDirs)
+
+foreach(header ${public_headers})
+    file(RELATIVE_PATH header_file_path "${CMAKE_CURRENT_SOURCE_DIR}/" "${header}")
+    get_filename_component(header_directory_path "${header_file_path}" DIRECTORY)
+    install(
+        FILES ${header}
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${header_directory_path}"
+    )
+endforeach()
+
+# Install instructions
+install(TARGETS ${PROJECT_NAME}
+    EXPORT "${PROJECT_NAME}Targets"
+    # except for public headers, as we want them to be inside a library folder
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} # lib/SomeLibrary
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # lib
+)
+
+# generate and install export file
+install(EXPORT "${PROJECT_NAME}Targets"
+    FILE "${PROJECT_NAME}Targets.cmake"
+    NAMESPACE DB_STORAGE_LIBRARY::
+    DESTINATION cmake
+)
+
+message(STATUS "Operating System: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "System Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler Version: ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler Path: ${CMAKE_CXX_COMPILER}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
+message(STATUS "Build Generator: ${CMAKE_GENERATOR}")

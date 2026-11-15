@@ -1,20 +1,10 @@
 #pragma once
-#include "schema.hpp" // Schema
-#include "tuple.hpp"
-
-struct SourceReference{
-    std::string tableName;
-    RID recordID;
-};
-
-struct Row {
-    Tuple tuple;
-    SourceReference source;
-};
-
+#include "types.hpp"
 
 class Executor
 {
+    private:
+
     public:
         virtual ~Executor() = default;
         virtual void Init() = 0;

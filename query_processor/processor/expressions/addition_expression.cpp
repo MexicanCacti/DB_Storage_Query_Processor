@@ -2,8 +2,8 @@
 
 ExpressionVariant AdditionExpression::Eval(const Row& row) const
 {
-    ExpressionVariant leftOp = left->Eval(row);
-    ExpressionVariant rightOp = right->Eval(row);
+    ExpressionVariant leftOp = leftExpression->Eval(row);
+    ExpressionVariant rightOp = rightExpression->Eval(row);
 
     if(!std::holds_alternative<int64_t>(leftOp) || !std::holds_alternative<int64_t>(rightOp))
     {
@@ -15,5 +15,6 @@ ExpressionVariant AdditionExpression::Eval(const Row& row) const
 
     // int overflow check
 
-    return leftVal + rightVal;
+    ExpressionVariant retVar = leftVal + rightVal;
+    return retVar;
 }

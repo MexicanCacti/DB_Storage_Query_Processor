@@ -1,6 +1,6 @@
 # Packages the storage engine into a library & also creates the runner & test executables 
 cmake_minimum_required(VERSION 3.10)
-project(DB_QUERY_PROCESSOR LANGUAGES CXX)
+project(QUERY_PROCESSOR_LIBRARY LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -13,6 +13,11 @@ target_sources(${PROJECT_NAME}
         processor/expressions/column_expression.cpp
         processor/expressions/addition_expression.cpp
         processor/expressions/subtraction_expression.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        DB_STORAGE_LIBRARY
 )
 
 # Include all DB Directories
@@ -60,7 +65,7 @@ set(public_headers
     ${CMAKE_CURRENT_SOURCE_DIR}/processor/expressions/subtraction_expression.hpp
 )
 
-set_target_properties(DB_QUERY_PROCESSOR PROPERTIES PUBLIC_HEADER "${public_headers}")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 
 # To preserve folder structure
 include(GNUInstallDirs)
@@ -88,3 +93,5 @@ install(EXPORT "${PROJECT_NAME}Targets"
     NAMESPACE DB_QUERY_PROCESSOR::
     DESTINATION cmake
 )
+
+add_subdirectory(google_tests)

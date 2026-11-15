@@ -1,6 +1,10 @@
 #pragma once
 #include "schema.hpp"
 #include "tuple.hpp"
+#include "data_page.hpp"
+
+#include <stdexcept>
+#include <optional>
 
 using ExpressionVariant = std::variant<int64_t, std::string, bool>; 
 
@@ -11,5 +15,5 @@ struct SourceReference{
 
 struct Row {
     Tuple tuple;
-    SourceReference source;
+    std::optional<SourceReference> source;
 };

@@ -2,7 +2,7 @@
 
 ExpressionVariant ColumnExpression::Eval(const Row& row) const {
 
-    std::vector<FieldVariant> tupleValues = row.Tuple.getTupleValues();
+    std::vector<FieldVariant> tupleValues = row.tuple.getTupleValues();
 
     if(columnIndex >= tupleValues.size())
     {

@@ -28,14 +28,14 @@ add_executable(all_tests
 target_link_libraries( addition_expression_tests
     PRIVATE
         DB_STORAGE_LIBRARY
-        DB_QUERY_PROCESSOR
+        QUERY_PROCESSOR_LIBRARY
         GTest::gtest_main
 )
 
 target_link_libraries(all_tests
     PRIVATE
         DB_STORAGE_LIBRARY
-        DB_QUERY_PROCESSOR
+        QUERY_PROCESSOR_LIBRARY
         GTest::gtest_main
 )
 

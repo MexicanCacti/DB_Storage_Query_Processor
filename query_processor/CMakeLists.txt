@@ -15,7 +15,7 @@ target_sources(${PROJECT_NAME}
         processor/expressions/subtraction_expression.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(QUERY_PROCESSOR_LIBRARY
     PUBLIC
         DB_STORAGE_LIBRARY
 )
@@ -65,7 +65,7 @@ set(public_headers
     ${CMAKE_CURRENT_SOURCE_DIR}/processor/expressions/subtraction_expression.hpp
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
+set_target_properties(QUERY_PROCESSOR_LIBRARY PROPERTIES PUBLIC_HEADER "${public_headers}")
 
 # To preserve folder structure
 include(GNUInstallDirs)
@@ -93,5 +93,3 @@ install(EXPORT "${PROJECT_NAME}Targets"
     NAMESPACE DB_QUERY_PROCESSOR::
     DESTINATION cmake
 )
-
-add_subdirectory(google_tests)

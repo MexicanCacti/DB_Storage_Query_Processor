@@ -7,6 +7,7 @@ enable_testing()
 
 add_subdirectory(storage_engine)
 add_subdirectory(query_processor)
+add_subdirectory(query_processor/google_tests)
 
 add_executable(main_test
     main.cpp

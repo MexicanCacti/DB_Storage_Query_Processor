@@ -15,6 +15,11 @@ ExpressionVariant AdditionExpression::Eval(const Row& row) const
 
     // int overflow check
 
+    if( (rightVal > 0 && leftVal > std::numeric_limits<int64_t>::max() - rightVal) || (rightVal < 0 && leftVal < std::numeric_limits<int64_t>::min() - rightVal) )
+    {
+        throw std::overflow_error("[Addition Expression - Eval]: Overflow");
+    }
+
     ExpressionVariant retVar = leftVal + rightVal;
     return retVar;
 }

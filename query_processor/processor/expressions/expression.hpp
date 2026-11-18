@@ -1,6 +1,7 @@
 #pragma once
 #include "types.hpp"
 #include <variant>
+#include <limits>
 
 class Expression {
     private:

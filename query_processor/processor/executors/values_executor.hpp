@@ -11,8 +11,8 @@ class ValuesExecutor : public Executor
 
     public:
         ValuesExecutor(std::shared_ptr<const std::vector<Row>> rows, std::shared_ptr<const Schema> schema) :
-            rowsPointer(std::move(rows)) , schemaPointer(std::move(schema))
-        {}
+            rowsPointer(rows) , schemaPointer(schema)
+            {}
         void Init() override {currentRowIndex = 0;}
         bool Next(Row& out) override;
         void Close() override {currentRowIndex = rowsPointer->size();}

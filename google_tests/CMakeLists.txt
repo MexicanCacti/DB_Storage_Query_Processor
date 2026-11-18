@@ -30,7 +30,8 @@ add_executable(all_expression_tests
 )
 
 add_executable(all_executor_tests
-  executor_tests/values_executor_tests.cpp
+    executor_tests/values_executor_tests.cpp
+    executor_tests/sequential_scan_executor_tests.cpp
 )
 
 target_link_libraries(all_expression_tests
@@ -49,6 +50,7 @@ target_link_libraries(all_executor_tests
 
 include(GoogleTest)
 gtest_discover_tests(all_expression_tests)
+gtest_discover_tests(all_executor_tests)
 
 set_target_properties(
     all_expression_tests

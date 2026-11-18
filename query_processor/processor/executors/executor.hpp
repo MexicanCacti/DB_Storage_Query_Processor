@@ -1,5 +1,6 @@
 #pragma once
 #include "types.hpp"
+#include "database.hpp"
 #include <algorithm>
 
 class Executor

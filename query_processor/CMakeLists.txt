@@ -22,6 +22,7 @@ target_sources(${PROJECT_NAME}
         processor/expressions/or_expression.cpp
         processor/expressions/not_expression.cpp
         processor/executors/values_executor.cpp
+        processor/executors/sequential_scan_executor.cpp
 
 )
 

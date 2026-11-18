@@ -12,6 +12,7 @@ class Tuple
         std::vector<FieldVariant> tupleValues;
 
     public:
+        Tuple() = default;
         Tuple(const std::vector<FieldVariant>& valueList) : tupleValues(valueList) {}
         const std::vector<FieldVariant>& getTupleValues() const {return tupleValues;}
         const FieldVariant& getTupleValueIndex(std::size_t index);

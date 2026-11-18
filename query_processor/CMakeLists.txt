@@ -16,6 +16,9 @@ target_sources(${PROJECT_NAME}
         processor/expressions/not_equal_expression.cpp
         processor/expressions/greater_than_expression.cpp
         processor/expressions/greater_than_equal_expression.cpp
+        processor/expressions/less_than_expression.cpp
+        processor/expressions/less_than_equal_expression.cpp
+
 )
 
 target_include_directories(${PROJECT_NAME}

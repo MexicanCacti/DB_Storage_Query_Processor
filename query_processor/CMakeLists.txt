@@ -21,6 +21,7 @@ target_sources(${PROJECT_NAME}
         processor/expressions/and_expression.cpp
         processor/expressions/or_expression.cpp
         processor/expressions/not_expression.cpp
+        processor/executors/values_executor.cpp
 
 )
 
@@ -28,6 +29,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/processor
         ${CMAKE_CURRENT_SOURCE_DIR}/processor/expressions
+        ${CMAKE_CURRENT_SOURCE_DIR}/processor/executors
 )
 
 target_link_libraries(${PROJECT_NAME}

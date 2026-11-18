@@ -1,6 +1,6 @@
 #pragma once
 #include "types.hpp"
-#include <algorthim>
+#include <algorithm>
 
 class Executor
 {
@@ -10,7 +10,7 @@ class Executor
         virtual ~Executor() = default;
         virtual void Init() = 0;
         virtual bool Next(Row& out) = 0;
-        virtual Close() = 0;
+        virtual void Close() = 0;
         virtual const Schema& OutputSchema() const = 0;
 
 };

@@ -15,22 +15,32 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(all_tests
-    addition_expression_tests.cpp
-    subtraction_expression_tests.cpp
-    equal_expression_tests.cpp
-    not_equal_expression_tests.cpp
-    greater_than_expression_tests.cpp
-    greater_than_equal_expression_tests.cpp
-    less_than_expression_tests.cpp
-    less_than_equal_expression_tests.cpp
-    and_expression_tests.cpp
-    or_expression_tests.cpp
-    not_expression_tests.cpp
+add_executable(all_expression_tests
+    expression_tests/addition_expression_tests.cpp
+    expression_tests/subtraction_expression_tests.cpp
+    expression_tests/equal_expression_tests.cpp
+    expression_tests/not_equal_expression_tests.cpp
+    expression_tests/greater_than_expression_tests.cpp
+    expression_tests/greater_than_equal_expression_tests.cpp
+    expression_tests/less_than_expression_tests.cpp
+    expression_tests/less_than_equal_expression_tests.cpp
+    expression_tests/and_expression_tests.cpp
+    expression_tests/or_expression_tests.cpp
+    expression_tests/not_expression_tests.cpp
 )
 
+add_executable(all_executor_tests
+  executor_tests/values_executor_tests.cpp
+)
 
-target_link_libraries(all_tests
+target_link_libraries(all_expression_tests
+    PRIVATE
+        DB_STORAGE_LIBRARY
+        QUERY_PROCESSOR_LIBRARY
+        GTest::gtest_main
+)
+
+target_link_libraries(all_executor_tests
     PRIVATE
         DB_STORAGE_LIBRARY
         QUERY_PROCESSOR_LIBRARY
@@ -38,10 +48,16 @@ target_link_libraries(all_tests
 )
 
 include(GoogleTest)
-gtest_discover_tests(all_tests)
+gtest_discover_tests(all_expression_tests)
 
 set_target_properties(
-    all_tests
+    all_expression_tests
       PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Expression_Tests"
+)
+
+set_target_properties(
+    all_executor_tests
+      PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Executor_Tests"
 )

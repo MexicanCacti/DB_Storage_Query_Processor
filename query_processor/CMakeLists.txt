@@ -18,6 +18,9 @@ target_sources(${PROJECT_NAME}
         processor/expressions/greater_than_equal_expression.cpp
         processor/expressions/less_than_expression.cpp
         processor/expressions/less_than_equal_expression.cpp
+        processor/expressions/and_expression.cpp
+        processor/expressions/or_expression.cpp
+        processor/expressions/not_expression.cpp
 
 )
 

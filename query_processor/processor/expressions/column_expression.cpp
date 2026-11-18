@@ -4,7 +4,7 @@ ExpressionVariant ColumnExpression::Eval(const Row& row) const {
 
     std::vector<FieldVariant> tupleValues = row.tuple.getTupleValues();
 
-    if(columnIndex >= tupleValues.size())
+    if(columnIndex >= tupleValues.size() || columnIndex < 0)
     {
         throw std::out_of_range("[ColumnExpression - Eval]: Index column invalid");
     }

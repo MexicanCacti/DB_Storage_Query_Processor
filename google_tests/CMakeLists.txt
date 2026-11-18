@@ -24,6 +24,9 @@ add_executable(all_tests
     greater_than_equal_expression_tests.cpp
     less_than_expression_tests.cpp
     less_than_equal_expression_tests.cpp
+    and_expression_tests.cpp
+    or_expression_tests.cpp
+    not_expression_tests.cpp
 )
 
 

@@ -20,6 +20,5 @@ ExpressionVariant AdditionExpression::Eval(const Row& row) const
         throw std::overflow_error("[Addition Expression - Eval]: Overflow");
     }
 
-    ExpressionVariant retVar = leftVal + rightVal;
-    return retVar;
+    return leftVal + rightVal;
 }

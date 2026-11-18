@@ -20,6 +20,5 @@ ExpressionVariant SubtractionExpression::Eval(const Row& row) const
         throw std::overflow_error("[Subtraction Expression - Eval]: Overflow");
     }
 
-    ExpressionVariant retVar = leftVal - rightVal;
-    return retVar;
+    return leftVal - rightVal;
 }

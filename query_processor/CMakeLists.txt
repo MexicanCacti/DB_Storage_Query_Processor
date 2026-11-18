@@ -12,6 +12,10 @@ target_sources(${PROJECT_NAME}
         processor/expressions/column_expression.cpp
         processor/expressions/addition_expression.cpp
         processor/expressions/subtraction_expression.cpp
+        processor/expressions/equal_expression.cpp
+        processor/expressions/not_equal_expression.cpp
+        processor/expressions/greater_than_expression.cpp
+        processor/expressions/greater_than_equal_expression.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -15,32 +15,15 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable( addition_expression_tests
-  addition_expression_tests.cpp
-)
-
-add_executable( subtraction_expression_tests
-  subtraction_expression_tests.cpp
-)
-
 add_executable(all_tests
     addition_expression_tests.cpp
     subtraction_expression_tests.cpp
+    equal_expression_tests.cpp
+    not_equal_expression_tests.cpp
+    greater_than_expression_tests.cpp
+    greater_than_equal_expression_tests.cpp
 )
 
-target_link_libraries( addition_expression_tests
-    PRIVATE
-        DB_STORAGE_LIBRARY
-        QUERY_PROCESSOR_LIBRARY
-        GTest::gtest_main
-)
-
-target_link_libraries( subtraction_expression_tests
-    PRIVATE
-        DB_STORAGE_LIBRARY
-        QUERY_PROCESSOR_LIBRARY
-        GTest::gtest_main
-)
 
 target_link_libraries(all_tests
     PRIVATE
@@ -50,12 +33,10 @@ target_link_libraries(all_tests
 )
 
 include(GoogleTest)
-gtest_discover_tests(addition_expression_tests)
-gtest_discover_tests(subtraction_expression_tests)
 gtest_discover_tests(all_tests)
 
 set_target_properties(
-    addition_expression_tests subtraction_expression_tests all_tests
+    all_tests
       PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )

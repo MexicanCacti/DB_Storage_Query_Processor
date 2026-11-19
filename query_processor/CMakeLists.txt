@@ -25,6 +25,7 @@ target_sources(${PROJECT_NAME}
         processor/executors/sequential_scan_executor.cpp
         processor/executors/filter_executor.cpp
         processor/executors/projection_executor.cpp
+        processor/executors/limit_executor.cpp
 
 )
 

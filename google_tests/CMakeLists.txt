@@ -32,6 +32,8 @@ add_executable(all_expression_tests
 add_executable(all_executor_tests
     executor_tests/values_executor_tests.cpp
     executor_tests/sequential_scan_executor_tests.cpp
+    executor_tests/filter_executor_tests.cpp
+    executor_tests/projection_executor_tests.cpp
 )
 
 target_link_libraries(all_expression_tests

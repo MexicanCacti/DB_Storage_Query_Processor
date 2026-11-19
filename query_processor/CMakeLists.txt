@@ -23,6 +23,8 @@ target_sources(${PROJECT_NAME}
         processor/expressions/not_expression.cpp
         processor/executors/values_executor.cpp
         processor/executors/sequential_scan_executor.cpp
+        processor/executors/filter_executor.cpp
+        processor/executors/projection_executor.cpp
 
 )
 

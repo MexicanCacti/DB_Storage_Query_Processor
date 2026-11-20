@@ -4,7 +4,7 @@ SequentialScanExecutor::SequentialScanExecutor(std::shared_ptr<Database> databas
     : databasePointer(database), tableName(tableName)
 {
     TableHeader tableInfo = databasePointer->queryTableInfo(this->tableName);
-    schemaPointer = std::make_shared<const Schema>(tableInfo.getSchema());
+    schemaPointer = std::make_shared<const QuerySchema>(tableInfo.getSchema());
 
 }
 

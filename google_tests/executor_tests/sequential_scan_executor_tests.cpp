@@ -1,13 +1,13 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <stdexcept>
+#include <variant>
 
 #include "sequential_scan_executor.hpp"
 #include "database.hpp"
@@ -25,6 +25,7 @@ class SequentialScanExecutorTest : public ::testing::Test
 protected:
     fs::path databaseDirectory;
     std::shared_ptr<Database> database;
+
     std::vector<RID> insertedRIDs;
 
     void SetUp() override
@@ -43,6 +44,7 @@ protected:
             databaseDirectory
         );
 
+        // Database still uses the storage Schema.
         Schema schema({
             Field{"id", FieldType::INT64},
             Field{"name", FieldType::STRING32},
@@ -94,7 +96,6 @@ protected:
         );
     }
 
-    // Compare RID without requiring RID::operator==
     static void ExpectRIDEqual(
         const RID& actual,
         const RID& expected
@@ -113,9 +114,9 @@ protected:
 
     static void ExpectStudent(
         const Row& row,
-        int64_t id,
-        const std::string& name,
-        int64_t score
+        int64_t expectedID,
+        const std::string& expectedName,
+        int64_t expectedScore
     )
     {
         const auto& values = row.tuple.getTupleValues();
@@ -134,13 +135,24 @@ protected:
             std::holds_alternative<int64_t>(values[2])
         );
 
-        EXPECT_EQ(std::get<int64_t>(values[0]), id);
-        EXPECT_EQ(std::get<std::string>(values[1]), name);
-        EXPECT_EQ(std::get<int64_t>(values[2]), score);
+        EXPECT_EQ(
+            std::get<int64_t>(values[0]),
+            expectedID
+        );
+
+        EXPECT_EQ(
+            std::get<std::string>(values[1]),
+            expectedName
+        );
+
+        EXPECT_EQ(
+            std::get<int64_t>(values[2]),
+            expectedScore
+        );
     }
 
     static std::vector<Row> CollectRows(
-        SequentialScanExecutor& executor
+        Executor& executor
     )
     {
         std::vector<Row> results;
@@ -153,10 +165,28 @@ protected:
 
         return results;
     }
+
+    static void ExpectQuerySchema(
+        const QuerySchema& schema
+    )
+    {
+        const auto& fields = schema.getFieldList();
+
+        ASSERT_EQ(fields.size(), 3);
+
+        EXPECT_EQ(fields[0].name, "id");
+        EXPECT_EQ(fields[0].type, FieldType::INT64);
+
+        EXPECT_EQ(fields[1].name, "name");
+        EXPECT_EQ(fields[1].type, FieldType::STRING32);
+
+        EXPECT_EQ(fields[2].name, "score");
+        EXPECT_EQ(fields[2].type, FieldType::INT64);
+    }
 };
 
 // ============================================================
-// Test 1: Scan an empty table
+// 1. Empty table produces no rows
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, EmptyTable)
@@ -174,7 +204,7 @@ TEST_F(SequentialScanExecutorTest, EmptyTable)
 }
 
 // ============================================================
-// Test 2: Scan returns all inserted tuples exactly once
+// 2. Scan returns all live tuples exactly once
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, ReturnsAllTuples)
@@ -189,6 +219,7 @@ TEST_F(SequentialScanExecutorTest, ReturnsAllTuples)
 
     ASSERT_EQ(results.size(), 3);
 
+    // Do not assume scan order.
     std::sort(
         results.begin(),
         results.end(),
@@ -206,32 +237,62 @@ TEST_F(SequentialScanExecutorTest, ReturnsAllTuples)
 }
 
 // ============================================================
-// Test 3: OutputSchema matches the stored table
+// 3. OutputSchema returns QuerySchema before Init
 // ============================================================
 
-TEST_F(SequentialScanExecutorTest, OutputSchemaMatchesTable)
+TEST_F(SequentialScanExecutorTest, OutputSchemaBeforeInit)
 {
     SequentialScanExecutor executor(database, "students");
 
-    // Schema must be available before Init().
-    const Schema& schema = executor.OutputSchema();
+    const QuerySchema& querySchema =
+        executor.OutputSchema();
 
-    const auto& fields = schema.getFieldList();
-
-    ASSERT_EQ(fields.size(), 3);
-
-    EXPECT_EQ(fields[0].name, "id");
-    EXPECT_EQ(fields[0].type, FieldType::INT64);
-
-    EXPECT_EQ(fields[1].name, "name");
-    EXPECT_EQ(fields[1].type, FieldType::STRING32);
-
-    EXPECT_EQ(fields[2].name, "score");
-    EXPECT_EQ(fields[2].type, FieldType::INT64);
+    ExpectQuerySchema(querySchema);
 }
 
 // ============================================================
-// Test 4: Every scanned row has the correct source reference
+// 4. Storage Schema is converted to QuerySchema correctly
+// ============================================================
+
+TEST_F(SequentialScanExecutorTest, ConvertsStorageSchema)
+{
+    SequentialScanExecutor executor(database, "students");
+
+    std::string tableName = "students";
+
+    TableHeader tableInfo =
+        database->queryTableInfo(tableName);
+
+    const Schema& storageSchema =
+        tableInfo.getSchema();
+
+    const QuerySchema& querySchema =
+        executor.OutputSchema();
+
+    const auto& storageFields =
+        storageSchema.getFieldList();
+
+    const auto& queryFields =
+        querySchema.getFieldList();
+
+    ASSERT_EQ(storageFields.size(), queryFields.size());
+
+    for (std::size_t i = 0; i < storageFields.size(); ++i)
+    {
+        EXPECT_EQ(
+            storageFields[i].name,
+            queryFields[i].name
+        );
+
+        EXPECT_EQ(
+            storageFields[i].type,
+            queryFields[i].type
+        );
+    }
+}
+
+// ============================================================
+// 5. Source references preserve table identity and RID
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, PreservesSourceReferences)
@@ -260,21 +321,22 @@ TEST_F(SequentialScanExecutorTest, PreservesSourceReferences)
         ASSERT_LE(id, 3);
 
         const RID& expectedRID =
-            insertedRIDs[static_cast<std::size_t>(id - 1)];
+            insertedRIDs[
+                static_cast<std::size_t>(id - 1)
+            ];
 
         ExpectRIDEqual(
             row.source->rid,
             expectedRID
         );
 
-        // Verify the source RID can retrieve the same tuple.
-        Tuple stored = database->readTuple(
+        Tuple storedTuple = database->readTuple(
             "students",
             row.source->rid
         );
 
         EXPECT_EQ(
-            stored.getTupleValues(),
+            storedTuple.getTupleValues(),
             row.tuple.getTupleValues()
         );
 
@@ -287,14 +349,13 @@ TEST_F(SequentialScanExecutorTest, PreservesSourceReferences)
 }
 
 // ============================================================
-// Test 5: Deleted tuples are excluded
+// 6. Logically deleted tuples are skipped
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, SkipsDeletedTuples)
 {
     InsertStudents();
 
-    // Delete Bob.
     database->deleteTuple(
         "students",
         insertedRIDs[1]
@@ -324,7 +385,7 @@ TEST_F(SequentialScanExecutorTest, SkipsDeletedTuples)
 }
 
 // ============================================================
-// Test 6: Next remains false after exhaustion
+// 7. Exhaustion remains exhausted
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, ExhaustionReturnsFalse)
@@ -350,7 +411,7 @@ TEST_F(SequentialScanExecutorTest, ExhaustionReturnsFalse)
 }
 
 // ============================================================
-// Test 7: Init resets the scan
+// 8. Init resets the scan
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, InitResetsIteration)
@@ -364,7 +425,6 @@ TEST_F(SequentialScanExecutorTest, InitResetsIteration)
     auto firstResults = CollectRows(executor);
 
     executor.Close();
-
     executor.Init();
 
     auto secondResults = CollectRows(executor);
@@ -372,7 +432,6 @@ TEST_F(SequentialScanExecutorTest, InitResetsIteration)
     ASSERT_EQ(firstResults.size(), 3);
     ASSERT_EQ(secondResults.size(), 3);
 
-    // Compare corresponding rows.
     for (std::size_t i = 0; i < firstResults.size(); ++i)
     {
         EXPECT_EQ(
@@ -393,7 +452,7 @@ TEST_F(SequentialScanExecutorTest, InitResetsIteration)
 }
 
 // ============================================================
-// Test 8: Close before exhaustion allows reuse
+// 9. Close before exhaustion
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, CloseBeforeExhaustion)
@@ -420,7 +479,7 @@ TEST_F(SequentialScanExecutorTest, CloseBeforeExhaustion)
 }
 
 // ============================================================
-// Test 9: Close is idempotent
+// 10. Close can be called multiple times
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, CloseIsIdempotent)
@@ -429,7 +488,7 @@ TEST_F(SequentialScanExecutorTest, CloseIsIdempotent)
 
     SequentialScanExecutor executor(database, "students");
 
-    // Close before initialization.
+    // Close before Init.
     EXPECT_NO_THROW(executor.Close());
 
     executor.Init();
@@ -438,7 +497,6 @@ TEST_F(SequentialScanExecutorTest, CloseIsIdempotent)
     EXPECT_NO_THROW(executor.Close());
     EXPECT_NO_THROW(executor.Close());
 
-    // Must still support a new execution.
     executor.Init();
 
     auto results = CollectRows(executor);
@@ -449,7 +507,27 @@ TEST_F(SequentialScanExecutorTest, CloseIsIdempotent)
 }
 
 // ============================================================
-// Test 10: Returned rows remain valid after Close
+// 11. OutputSchema remains valid after Close
+// ============================================================
+
+TEST_F(SequentialScanExecutorTest, SchemaAvailableAfterClose)
+{
+    InsertStudents();
+
+    SequentialScanExecutor executor(database, "students");
+
+    executor.Init();
+
+    Row row;
+    ASSERT_TRUE(executor.Next(row));
+
+    executor.Close();
+
+    ExpectQuerySchema(executor.OutputSchema());
+}
+
+// ============================================================
+// 12. Returned rows remain valid after Next and Close
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, ReturnedRowsRemainValid)
@@ -465,13 +543,15 @@ TEST_F(SequentialScanExecutorTest, ReturnedRowsRemainValid)
 
     ASSERT_TRUE(executor.Next(firstRow));
 
-    // Save the first row's values before advancing.
     const auto savedValues =
         firstRow.tuple.getTupleValues();
 
+    ASSERT_TRUE(firstRow.source.has_value());
+
+    const RID savedRID = firstRow.source->rid;
+
     ASSERT_TRUE(executor.Next(secondRow));
 
-    // Advancing must not change the first row.
     EXPECT_EQ(
         firstRow.tuple.getTupleValues(),
         savedValues
@@ -479,28 +559,21 @@ TEST_F(SequentialScanExecutorTest, ReturnedRowsRemainValid)
 
     executor.Close();
 
-    // Closing must not invalidate either returned row.
     EXPECT_EQ(
         firstRow.tuple.getTupleValues(),
         savedValues
     );
 
     ASSERT_TRUE(firstRow.source.has_value());
-    ASSERT_TRUE(secondRow.source.has_value());
 
-    Tuple stored = database->readTuple(
-        "students",
-        firstRow.source->rid
-    );
-
-    EXPECT_EQ(
-        stored.getTupleValues(),
-        savedValues
+    ExpectRIDEqual(
+        firstRow.source->rid,
+        savedRID
     );
 }
 
 // ============================================================
-// Test 11: Reinitialization sees newly inserted tuples
+// 13. Reinitialization detects newly inserted tuples
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, ReinitSeesNewTuples)
@@ -534,7 +607,7 @@ TEST_F(SequentialScanExecutorTest, ReinitSeesNewTuples)
 
     bool foundDan = false;
 
-    for (const auto& row : secondResults)
+    for (const Row& row : secondResults)
     {
         if (GetStudentID(row) == 4)
         {
@@ -549,7 +622,7 @@ TEST_F(SequentialScanExecutorTest, ReinitSeesNewTuples)
 }
 
 // ============================================================
-// Test 12: Two executors scan independently
+// 14. Two scan executors operate independently
 // ============================================================
 
 TEST_F(SequentialScanExecutorTest, IndependentExecutors)
@@ -563,47 +636,57 @@ TEST_F(SequentialScanExecutorTest, IndependentExecutors)
     executor2.Init();
 
     Row row1;
-    Row row2;
 
     ASSERT_TRUE(executor1.Next(row1));
-
-    // Advance executor1 again.
     ASSERT_TRUE(executor1.Next(row1));
 
-    // Executor2 must still have all three rows available.
+    // Executor2 should still return all three tuples.
     auto results = CollectRows(executor2);
 
-    EXPECT_EQ(results.size(), 3);
+    ASSERT_EQ(results.size(), 3);
 
     executor1.Close();
     executor2.Close();
 }
 
-TEST_F(SequentialScanExecutorTest, DatabaseSupportsRepeatedScans)
+// ============================================================
+// 15. Closing one executor does not affect another
+// ============================================================
+
+TEST_F(SequentialScanExecutorTest, ClosingOneDoesNotAffectAnother)
 {
     InsertStudents();
 
-    std::vector<std::pair<Tuple, RID>> firstScan;
-    std::vector<std::pair<Tuple, RID>> secondScan;
+    SequentialScanExecutor executor1(database, "students");
+    SequentialScanExecutor executor2(database, "students");
 
-    ASSERT_NO_THROW({
-        firstScan = database->scan("students");
-    });
+    executor1.Init();
+    executor2.Init();
 
-    ASSERT_NO_THROW({
-        secondScan = database->scan("students");
-    });
+    executor1.Close();
 
-    EXPECT_EQ(firstScan.size(), 3);
-    EXPECT_EQ(secondScan.size(), 3);
+    auto results = CollectRows(executor2);
+
+    ASSERT_EQ(results.size(), 3);
+
+    executor2.Close();
 }
 
-TEST_F(SequentialScanExecutorTest, MultipleExecutorConstruction)
+// ============================================================
+// 16. Next after Close returns false
+// ============================================================
+
+TEST_F(SequentialScanExecutorTest, NextAfterClose)
 {
     InsertStudents();
 
-    ASSERT_NO_THROW({
-        SequentialScanExecutor executor1(database, "students");
-        SequentialScanExecutor executor2(database, "students");
-    });
+    SequentialScanExecutor executor(database, "students");
+
+    executor.Init();
+    executor.Close();
+
+    Row row;
+
+    EXPECT_FALSE(executor.Next(row));
+    EXPECT_FALSE(executor.Next(row));
 }

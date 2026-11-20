@@ -16,5 +16,5 @@ class FilterExecutor : public Executor
         void Init() override {childExecutor->Init();}
         bool Next(Row& out) override;
         void Close() override {childExecutor->Close();}
-        const Schema& OutputSchema() const override {return childExecutor->OutputSchema();}
+        const QuerySchema& OutputSchema() const override {return childExecutor->OutputSchema();}
 };

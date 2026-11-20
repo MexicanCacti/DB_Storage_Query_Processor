@@ -17,5 +17,5 @@ class LimitExecutor : public Executor
         void Init() override {childExecutor->Init(); rowsGiven = 0;}
         bool Next(Row& out) override;
         void Close() override {childExecutor->Close(); rowsGiven = kVal;}
-        const Schema& OutputSchema() const override {return childExecutor->OutputSchema();}
+        const QuerySchema& OutputSchema() const override {return childExecutor->OutputSchema();}
 };

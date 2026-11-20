@@ -28,12 +28,12 @@
 class FilterExecutorTest : public ::testing::Test
 {
 protected:
-    std::shared_ptr<const Schema> schema;
+    std::shared_ptr<const QuerySchema> schema;
     std::shared_ptr<const std::vector<Row>> rows;
 
     void SetUp() override
     {
-        schema = std::make_shared<const Schema>(
+        schema = std::make_shared<const QuerySchema>(
             std::vector<Field>{
                 Field{"id", FieldType::INT64},
                 Field{"name", FieldType::STRING32},
@@ -482,7 +482,7 @@ TEST_F(FilterExecutorTest, OutputSchemaMatchesChild)
         std::move(predicate)
     );
 
-    const Schema& outputSchema = executor.OutputSchema();
+    const QuerySchema& outputSchema = executor.OutputSchema();
 
     const auto& fields = outputSchema.getFieldList();
 

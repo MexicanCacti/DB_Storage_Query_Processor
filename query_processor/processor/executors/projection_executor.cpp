@@ -1,7 +1,7 @@
 #include "projection_executor.hpp"
 
 ProjectionExecutor::ProjectionExecutor(std::unique_ptr<Executor> child, std::vector<ProjectionColumn> pList) :
-    childExecutor(std::move(child)), projectionList(std::move(pList)) 
+    childExecutor(std::move(child)), projectionList(std::move(pList))
 {
     std::vector<Field> schemaValues;
     for(ProjectionColumn& projection : projectionList)
@@ -9,7 +9,7 @@ ProjectionExecutor::ProjectionExecutor(std::unique_ptr<Executor> child, std::vec
         schemaValues.push_back({projection.projectionField.name, projection.projectionField.type});
     }
 
-    projectionSchema = Schema(schemaValues);
+    projectionSchema = QuerySchema(schemaValues);
 }
 
 bool ProjectionExecutor::Next(Row& out)

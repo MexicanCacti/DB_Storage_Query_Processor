@@ -25,12 +25,12 @@
 class ProjectionExecutorTest : public ::testing::Test
 {
 protected:
-    std::shared_ptr<const Schema> schema;
+    std::shared_ptr<const QuerySchema> schema;
     std::shared_ptr<const std::vector<Row>> rows;
 
     void SetUp() override
     {
-        schema = std::make_shared<const Schema>(
+        schema = std::make_shared<const QuerySchema>(
             std::vector<Field>{
                 Field{"id", FieldType::INT64},
                 Field{"name", FieldType::STRING32},
@@ -128,7 +128,7 @@ protected:
     }
 
     static void ExpectSchema(
-        const Schema& actualSchema,
+        const QuerySchema& actualSchema,
         const std::vector<Field>& expected
     )
     {

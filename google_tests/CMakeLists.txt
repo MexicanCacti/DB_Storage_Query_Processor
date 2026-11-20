@@ -39,6 +39,7 @@ add_executable(all_executor_tests
     executor_tests/sort_executor_tests.cpp
     executor_tests/insert_executor_tests.cpp
     executor_tests/delete_executor_tests.cpp
+    executor_tests/update_executor_tests.cpp
 )
 
 target_link_libraries(all_expression_tests

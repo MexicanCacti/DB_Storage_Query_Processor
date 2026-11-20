@@ -30,6 +30,7 @@ target_sources(${PROJECT_NAME}
         processor/executors/sort_executor.cpp
         processor/executors/insert_executor.cpp
         processor/executors/delete_executor.cpp
+        processor/executors/update_executor.cpp
 
 )
 

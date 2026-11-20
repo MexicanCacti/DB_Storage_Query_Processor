@@ -27,6 +27,7 @@ target_sources(${PROJECT_NAME}
         processor/executors/projection_executor.cpp
         processor/executors/limit_executor.cpp
         processor/executors/nested_loop_join_executor.cpp
+        processor/executors/sort_executor.cpp
 
 )
 

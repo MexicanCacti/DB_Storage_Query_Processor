@@ -21,6 +21,7 @@
 #include "sequential_scan_executor.hpp"
 #include "projection_executor.hpp"
 #include "filter_executor.hpp"
+#include "nested_loop_join_executor.hpp"
 #include "database.hpp"
 
 
@@ -56,7 +57,7 @@ bool step_one(std::shared_ptr<Database> database, std::vector<std::pair<Tuple, R
 
 bool step_two(std::shared_ptr<Database> database, std::vector<std::pair<Tuple, RID>>& studentRIDS);
 
-// bool step_three(std::shared_ptr<Database> database);
+bool step_three(std::shared_ptr<Database> database, std::vector<std::pair<Tuple, RID>>& studentRIDS);
 
 // bool step_four(std::shared_ptr<Database> database);
 
@@ -98,6 +99,16 @@ int main(int argc, char* argv[])
     std::cout << "\t---Step 2 Test---";
     try{
         std::cout << "\t" << ((step_two(database, studentRIDs)) ? "[Pass" : "[Fail") << "]\n";
+    }
+    catch(std::exception& e)
+    {
+        std::cout << "[Fail]: " << e.what();
+        return -1;
+    }
+
+    std::cout << "\t---Step 3 Test---";
+    try{
+        std::cout << "\t" << ((step_three(database, studentRIDs)) ? "[Pass" : "[Fail") << "]\n";
     }
     catch(std::exception& e)
     {
@@ -308,5 +319,51 @@ bool step_two(std::shared_ptr<Database> database, std::vector<std::pair<Tuple, R
 */
 bool step_three(std::shared_ptr<Database> database, std::vector<std::pair<Tuple, RID>>& studentRIDS)
 {
+    std::unique_ptr<Executor> studentScan = std::make_unique<SequentialScanExecutor>(database, "students");
+    std::unique_ptr<Executor> deptScan = std::make_unique<SequentialScanExecutor>(database, "depts");
 
+    std::unique_ptr<Expression> filterExpression = 
+        std::make_unique<EqualExpression>(
+            std::make_unique<ColumnExpression>(2),
+            std::make_unique<ColumnExpression>(4)
+    );
+
+    std::unique_ptr<Executor> join = std::make_unique<NestedLoopExecutor>(
+        std::move(studentScan), std::move(deptScan), std::move(filterExpression)
+    );
+
+    std::vector<ProjectionColumn> projectionList;
+    projectionList.push_back(ProjectionColumn{Field{"name", FieldType::STRING32}, std::make_unique<ColumnExpression>(1)});
+    projectionList.push_back(ProjectionColumn{Field{"building", FieldType::STRING32}, std::make_unique<ColumnExpression>(5)});
+
+    ProjectionExecutor projection(std::move(join), std::move(projectionList));
+    projection.Init();
+    Row row;
+
+    std::vector<Row> projectionRows;
+
+    while(projection.Next(row))
+    {
+        projectionRows.push_back(row);
+    }
+    projection.Close();
+
+    if(projectionRows.size() != 5) return false;
+
+    if(std::get<std::string>(projectionRows[0].tuple.getTupleValueIndex(0)) != "Alice") return false;
+    if(std::get<std::string>(projectionRows[0].tuple.getTupleValueIndex(1)) != "Tech") return false;
+
+    if(std::get<std::string>(projectionRows[1].tuple.getTupleValueIndex(0)) != "Bob") return false;
+    if(std::get<std::string>(projectionRows[1].tuple.getTupleValueIndex(1)) != "Tech") return false;
+
+    if(std::get<std::string>(projectionRows[2].tuple.getTupleValueIndex(0)) != "Carol") return false;
+    if(std::get<std::string>(projectionRows[2].tuple.getTupleValueIndex(1)) != "Science") return false;
+
+    if(std::get<std::string>(projectionRows[3].tuple.getTupleValueIndex(0)) != "Dan") return false;
+    if(std::get<std::string>(projectionRows[3].tuple.getTupleValueIndex(1)) != "Science") return false;
+
+    if(std::get<std::string>(projectionRows[4].tuple.getTupleValueIndex(0)) != "Eve") return false;
+    if(std::get<std::string>(projectionRows[4].tuple.getTupleValueIndex(1)) != "Tech") return false;
+
+    return true;
 }

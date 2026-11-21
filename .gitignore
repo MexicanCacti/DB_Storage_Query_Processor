@@ -2,3 +2,5 @@ Debug/
 Release/
 build/
 database_data/
+storage/
+tests/Debug/
